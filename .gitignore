@@ -1,0 +1,10 @@
+Learn_PostProcessing/Assembly-CSharp.csproj
+Learn_PostProcessing/Assembly-CSharp-Editor.csproj
+Learn_PostProcessing/Learn_PostProcessing.sln
+Learn_PostProcessing/Unity.Postprocessing.Editor.csproj
+Learn_PostProcessing/Unity.Postprocessing.Editor.Tests.csproj
+Learn_PostProcessing/Unity.Postprocessing.Runtime.csproj
+Learn_PostProcessing/Unity.Postprocessing.Runtime.Tests.csproj
+Learn_PostProcessing/.vscode/launch.json
+Learn_PostProcessing/.vscode/settings.json
+Learn_PostProcessing/Library/
