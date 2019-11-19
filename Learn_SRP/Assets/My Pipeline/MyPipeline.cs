@@ -12,6 +12,18 @@ public class MyPipeline : RenderPipeline
     CommandBuffer cmd = new CommandBuffer() { name = "保持空杯心态 " };
 
     Material errorMaterial;
+    DrawRendererFlags drawFlags;
+    public MyPipeline(bool dynamicBatching, bool instancing)
+    {
+        if (dynamicBatching)
+        {
+            drawFlags = DrawRendererFlags.EnableDynamicBatching;
+        }
+        if (instancing)
+        {
+            drawFlags |= DrawRendererFlags.EnableInstancing;
+        }
+    }
 
     public override void Dispose()
     {
@@ -56,7 +68,6 @@ public class MyPipeline : RenderPipeline
 #endif
         CullResults.Cull(ref cullingParameters, renderContext, ref cull);
 
-
         CameraClearFlags clearFlags = camera.clearFlags;
 
         // 清除
@@ -67,6 +78,7 @@ public class MyPipeline : RenderPipeline
 
         // 绘制不透明几何体
         var drawSettings = new DrawRendererSettings(camera, new ShaderPassName("SRPDefaultUnlit"));
+        drawSettings.flags = drawFlags;
         drawSettings.sorting.flags = SortFlags.CommonOpaque;
         var filterSettings = new FilterRenderersSettings(true) { renderQueueRange = RenderQueueRange.opaque };
         renderContext.DrawRenderers(
@@ -107,6 +119,7 @@ public class MyPipeline : RenderPipeline
         var drawSettings = new DrawRendererSettings(
             camera, new ShaderPassName("ForwardBase")
         );
+
         drawSettings.SetShaderPassName(1, new ShaderPassName("PrepassBase"));
         drawSettings.SetShaderPassName(2, new ShaderPassName("Always"));
         drawSettings.SetShaderPassName(3, new ShaderPassName("Vertex"));

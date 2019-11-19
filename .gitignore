@@ -14,3 +14,13 @@ Learn_SRP/Assembly-CSharp-Editor.csproj
 Learn_SRP/Learn_SRP.sln
 Learn_SRP/.vscode/launch.json
 Learn_SRP/.vscode/settings.json
+Learn_PostProcessing/obj/Debug/Assembly-CSharp.csprojAssemblyReference.cache
+Learn_PostProcessing/obj/Debug/Unity.Postprocessing.Editor.csprojAssemblyReference.cache
+Learn_PostProcessing/obj/Debug/Unity.Postprocessing.Runtime.csprojAssemblyReference.cache
+Learn_SRP/Learn_SRP.code-workspace
+Learn_SRP/Unity.RenderPipelines.Core.Editor.csproj
+Learn_SRP/Unity.RenderPipelines.Core.Runtime.csproj
+Learn_SRP/Unity.RenderPipelines.Core.ShaderLibrary.csproj
+Learn_SRP/obj/Debug/Assembly-CSharp.csprojAssemblyReference.cache
+Learn_SRP/obj/Debug/Assembly-CSharp-Editor.csprojAssemblyReference.cache
+Learn_SRP/obj/Debug/Unity.RenderPipelines.Core.Runtime.csprojAssemblyReference.cache
