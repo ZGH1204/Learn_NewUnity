@@ -8,6 +8,15 @@ using Conditional = System.Diagnostics.ConditionalAttribute;
 
 public class MyPipeline : RenderPipeline
 {
+
+    const int maxVisibleLights = 4;
+
+    static int visibleLightColorsId = Shader.PropertyToID("_VisibleLightColors");
+    static int visibleLightDirectionsOrPositionsId = Shader.PropertyToID("_VisibleLightDirectionsOrPositions");
+
+    Vector4[] visibleLightColors = new Vector4[maxVisibleLights];
+    Vector4[] visibleLightDirectionsOrPositions = new Vector4[maxVisibleLights];
+
     CullResults cull;
     CommandBuffer cmd = new CommandBuffer() { name = "保持空杯心态 " };
 
@@ -15,6 +24,7 @@ public class MyPipeline : RenderPipeline
     DrawRendererFlags drawFlags;
     public MyPipeline(bool dynamicBatching, bool instancing)
     {
+        GraphicsSettings.lightsUseLinearIntensity = true;
         if (dynamicBatching)
         {
             drawFlags = DrawRendererFlags.EnableDynamicBatching;
@@ -50,6 +60,36 @@ public class MyPipeline : RenderPipeline
         }
     }
 
+    void ConfigureLights()
+    {
+        int i = 0;
+        for (; i < cull.visibleLights.Count; i++)
+        {
+            if (i == maxVisibleLights)
+            {
+                break;
+            }
+            VisibleLight light = cull.visibleLights[i];
+            visibleLightColors[i] = light.finalColor;
+            if (light.lightType == LightType.Directional)
+            {
+                Vector4 v = light.localToWorld.GetColumn(2);
+                v.x = -v.x;
+                v.y = -v.y;
+                v.z = -v.z;
+                visibleLightDirectionsOrPositions[i] = v;
+            }
+            else
+            {
+                visibleLightDirectionsOrPositions[i] = light.localToWorld.GetColumn(3);
+            }
+        }
+        for (; i < maxVisibleLights; i++)
+        {
+            visibleLightColors[i] = Color.clear;
+        }
+    }
+
     void Render(ScriptableRenderContext renderContext, Camera camera)
     {
         renderContext.SetupCameraProperties(camera);
@@ -72,7 +112,11 @@ public class MyPipeline : RenderPipeline
 
         // 清除
         cmd.ClearRenderTarget((clearFlags & CameraClearFlags.Depth) != 0, (clearFlags & CameraClearFlags.Color) != 0, camera.backgroundColor);
+
+        ConfigureLights();
         cmd.BeginSample("Render Camera");
+        cmd.SetGlobalVectorArray(visibleLightColorsId, visibleLightColors);
+        cmd.SetGlobalVectorArray(visibleLightDirectionsOrPositionsId, visibleLightDirectionsOrPositions);
         renderContext.ExecuteCommandBuffer(cmd);
         cmd.Clear();
 
