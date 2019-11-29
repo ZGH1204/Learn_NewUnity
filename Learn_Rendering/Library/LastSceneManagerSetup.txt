@@ -1,0 +1,4 @@
+sceneSetups:
+- path: Assets/RealToon/Examples/RealToon Example Character Setup.unity
+  isLoaded: 1
+  isActive: 1

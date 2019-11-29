@@ -3,7 +3,6 @@
 
     #include "Packages/com.unity.render-pipelines.core/ShaderLibrary/Common.hlsl"
 
-
     CBUFFER_START(UnityPerFrame)
     float4x4 unity_MatrixVP;
     CBUFFER_END

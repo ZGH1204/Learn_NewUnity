@@ -9,13 +9,17 @@ using Conditional = System.Diagnostics.ConditionalAttribute;
 public class MyPipeline : RenderPipeline
 {
 
-    const int maxVisibleLights = 4;
+    const int maxVisibleLights = 16;
 
     static int visibleLightColorsId = Shader.PropertyToID("_VisibleLightColors");
     static int visibleLightDirectionsOrPositionsId = Shader.PropertyToID("_VisibleLightDirectionsOrPositions");
+    static int visibleLightAttenuationsId = Shader.PropertyToID("_VisibleLightAttenuations");
+    static int visibleLightSpotDirectionsId = Shader.PropertyToID("_VisibleLightSpotDirections");
 
     Vector4[] visibleLightColors = new Vector4[maxVisibleLights];
     Vector4[] visibleLightDirectionsOrPositions = new Vector4[maxVisibleLights];
+    Vector4[] visibleLightAttenuations = new Vector4[maxVisibleLights];
+    Vector4[] visibleLightSpotDirections = new Vector4[maxVisibleLights];
 
     CullResults cull;
     CommandBuffer cmd = new CommandBuffer() { name = "保持空杯心态 " };
@@ -71,6 +75,8 @@ public class MyPipeline : RenderPipeline
             }
             VisibleLight light = cull.visibleLights[i];
             visibleLightColors[i] = light.finalColor;
+            Vector4 attenuation = Vector4.zero;
+            attenuation.w = 1f;
             if (light.lightType == LightType.Directional)
             {
                 Vector4 v = light.localToWorld.GetColumn(2);
@@ -82,11 +88,40 @@ public class MyPipeline : RenderPipeline
             else
             {
                 visibleLightDirectionsOrPositions[i] = light.localToWorld.GetColumn(3);
+                visibleLightDirectionsOrPositions[i] = light.localToWorld.GetColumn(3);
+                attenuation.x = 1f / Mathf.Max(light.range * light.range, 0.00001f);
+                if (light.lightType == LightType.Spot)
+                {
+                    Vector4 v = light.localToWorld.GetColumn(2);
+                    v.x = -v.x;
+                    v.y = -v.y;
+                    v.z = -v.z;
+                    visibleLightSpotDirections[i] = v;
+                    float outerRad = Mathf.Deg2Rad * 0.5f * light.spotAngle;
+                    float outerCos = Mathf.Cos(outerRad);
+                    float outerTan = Mathf.Tan(outerRad);
+                    float innerCos = Mathf.Cos(Mathf.Atan(((46f / 64f) * outerTan)));
+                    float angleRange = Mathf.Max(innerCos - outerCos, 0.001f);
+                    attenuation.z = 1f / angleRange;
+                    attenuation.w = -outerCos * attenuation.z;
+
+                }
+                visibleLightAttenuations[i] = attenuation;
             }
         }
-        for (; i < maxVisibleLights; i++)
+
+        if (cull.visibleLights.Count > maxVisibleLights)
         {
-            visibleLightColors[i] = Color.clear;
+            int[] lightIndices = cull.GetLightIndexMap();
+            for (i = maxVisibleLights; i < cull.visibleLights.Count; i++)
+            {
+                lightIndices[i] = -1;
+            }
+            cull.SetLightIndexMap(lightIndices);
+            // for (; i < maxVisibleLights; i++)
+            // {
+            //     visibleLightColors[i] = Color.clear;
+            // }
         }
     }
 
@@ -117,12 +152,15 @@ public class MyPipeline : RenderPipeline
         cmd.BeginSample("Render Camera");
         cmd.SetGlobalVectorArray(visibleLightColorsId, visibleLightColors);
         cmd.SetGlobalVectorArray(visibleLightDirectionsOrPositionsId, visibleLightDirectionsOrPositions);
+        cmd.SetGlobalVectorArray(visibleLightAttenuationsId, visibleLightAttenuations);
+        cmd.SetGlobalVectorArray(visibleLightSpotDirectionsId, visibleLightSpotDirections);
         renderContext.ExecuteCommandBuffer(cmd);
         cmd.Clear();
 
         // 绘制不透明几何体
         var drawSettings = new DrawRendererSettings(camera, new ShaderPassName("SRPDefaultUnlit"));
         drawSettings.flags = drawFlags;
+        drawSettings.rendererConfiguration = RendererConfiguration.PerObjectLightIndices8;
         drawSettings.sorting.flags = SortFlags.CommonOpaque;
         var filterSettings = new FilterRenderersSettings(true) { renderQueueRange = RenderQueueRange.opaque };
         renderContext.DrawRenderers(
